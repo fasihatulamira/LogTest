@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Recycle Bin - User Management System{% endblock %}
+
+{% block content %}
+<div class="dashboard-container full-width">
+
+    <div class="glass-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <h2>Recycle Bin</h2>
+            <a href="{{ url_for('index') }}" class="btn-filter"
+                style="text-decoration: none; padding: 0.6rem 1.2rem; background: var(--secondary-gradient); color: white; border-radius: 8px;">Back
+                to Directory</a>
+        </div>
+
+        <p style="margin-bottom: 1.5rem; color: var(--text-muted);">These users have been deleted and can be restored to
+            the main directory at any time.</p>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Avatar</th>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if users %}
+                    {% for user in users %}
+                    <tr>
+                        <td>
+                            {% if user[7] and user[7] != 'default.png' %}
+                            <img src="{{ url_for('static', filename='uploads/' + user[7]) }}" alt="Avatar"
+                                class="avatar-sm">
+                            {% else %}
+                            <div class="avatar-sm placeholder"></div>
+                            {% endif %}
+                        </td>
+                        <td>#{{ user[0] }}</td>
+                        <td><strong>{{ user[1] }}</strong></td>
+                        <td>{{ user[2] }}</td>
+                        <td><span class="badge">{{ user[5] }}</span></td>
+                        <td><span class="badge {{ user[6]|lower }}">{{ user[6] }}</span></td>
+                        <td class="action-links">
+                            <a href="/restore/{{ user[0] }}" class="btn-restore">Restore</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 3rem; color: var(--text-muted);">
+                            Recycle bin is empty.
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

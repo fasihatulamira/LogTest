@@ -40,11 +40,45 @@
         font-weight: 500;
         color: #fff;
     }
+    .split-layout {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        align-items: start;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    @media (max-width: 900px) {
+        .split-layout {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .activity-log-title {
+        margin: 0 0 1.5rem 0 !important;
+        text-align: left;
+    }
+
+    .activity-card {
+        max-height: 800px;
+        overflow-y: auto;
+    }
+
+    .activity-card::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .activity-card::-webkit-scrollbar-thumb {
+        background: var(--card-border);
+        border-radius: 10px;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="dashboard-container center-layout">
+<div class="dashboard-container split-layout">
+    <!-- Left Column: Profile Details -->
     <div class="glass-card profile-card" style="text-align: center;">
 
         <div class="profile-preview" style="margin-top: 1rem;">
@@ -75,6 +109,10 @@
                 <span class="info-label">Status</span>
                 <span class="badge {{ user[6]|lower }}" style="margin: 0;">{{ user[6] }}</span>
             </div>
+            <div class="info-row">
+                <span class="info-label">Last Login</span>
+                <span class="info-value">{% if user[10] %}{{ user[10].strftime('%Y-%m-%d %H:%M:%S') }}{% else %}Never{% endif %}</span>
+            </div>
         </div>
 
         {% if session.get('user_role', '') == 'admin' %}
@@ -84,6 +122,27 @@
             <a href="{{ url_for('update_user', id=user[0]) }}" class="btn-update" style="text-decoration: none; font-weight: 600;">Edit Profile</a>
         </div>
         {% endif %}
+    </div>
+
+    <!-- Right Column: Recent Activity -->
+    <div class="glass-card activity-card">
+        <h3 class="activity-log-title" style="font-size: 1.5rem;">Recent Activity</h3>
+        <div class="activity-feed">
+            {% if logs %}
+                {% for log in logs %}
+                <div class="info-box" style="padding: 1rem; margin-bottom: 1rem;">
+                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                        <span class="info-value" style="font-size: 1rem; color: #fff;">{{ log[0] }}</span>
+                        <span class="info-label" style="font-size: 0.8rem; opacity: 0.8;">{{ log[1].strftime('%Y-%m-%d %H:%M:%S') }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="info-box" style="text-align: center; padding: 3rem;">
+                    <p style="color: var(--text-muted);">No activity recorded yet.</p>
+                </div>
+            {% endif %}
+        </div>
     </div>
 </div>
 {% endblock %}

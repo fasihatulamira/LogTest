@@ -24,7 +24,7 @@ def require_login():
         
     # Strictly Admin-only routes
     if 'user_role' in session and session['user_role'] != 'admin':
-        admin_only = ['add_user_page', 'add_user', 'delete_user', 'send_notification', 'delete_notification']
+        admin_only = ['add_user_page', 'add_user', 'delete_user', 'send_notification', 'delete_notification', 'recycle_bin', 'restore_user']
         if request.endpoint in admin_only:
             return redirect(url_for('index'))
 
@@ -37,6 +37,10 @@ def get_db_connection():
         database="userdb"
     )
 
+def log_activity(cursor, user_id, action):
+    sql = "INSERT INTO activity_logs (user_id, action) VALUES (%s, %s)"
+    cursor.execute(sql, (user_id, action))
+
 # Dashboard & Directory
 # Renders the main table and constructs search & filter SQL queries
 @app.route("/")
@@ -48,7 +52,7 @@ def index():
     db = get_db_connection()
     cursor = db.cursor()
 
-    query = "SELECT * FROM users WHERE 1=1"
+    query = "SELECT * FROM users WHERE is_deleted = 0"
     params = []
 
     if search:
@@ -107,6 +111,7 @@ def add_user():
             
     sql = "INSERT INTO users (id, name, email, phone_number, password, role, status, profile_pic) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
     cursor.execute(sql, (next_id, name, email, phone_number, password, role, status, pic_filename))
+    log_activity(cursor, session.get('user_id'), f"Created new user: {name}")
     db.commit()
     cursor.close()
     db.close()
@@ -143,6 +148,7 @@ def update_user(id):
             sql = "UPDATE users SET name=%s, email=%s, phone_number=%s, password=%s, role=%s, status=%s WHERE id=%s"
             cursor.execute(sql, (name, email, phone_number, password, role, status, id))
         
+        log_activity(cursor, session.get('user_id'), f"Updated details for user: {name} (ID: {id})")
         db.commit()
         cursor.close()
         db.close()
@@ -166,19 +172,45 @@ def view_user(id):
     cursor = db.cursor()
     cursor.execute("SELECT * FROM users WHERE id=%s", (id,))
     user = cursor.fetchone()
+    # Fetch logs for the user
+    cursor.execute("SELECT action, created_at FROM activity_logs WHERE user_id = %s ORDER BY created_at DESC LIMIT 10", (id,))
+    logs = cursor.fetchall()
+    
     cursor.close()
     db.close()
-    return render_template("view.html", user=user)
+    return render_template("view.html", user=user, logs=logs)
 
 @app.route("/delete/<int:id>", methods=["GET"])
 def delete_user(id):
     db = get_db_connection()
     cursor = db.cursor()
-    cursor.execute("DELETE FROM users WHERE id=%s", (id,))
+    cursor.execute("UPDATE users SET is_deleted = 1 WHERE id=%s", (id,))
+    log_activity(cursor, session.get('user_id'), f"Deleted user ID: {id} (Moved to Recycle Bin)")
     db.commit()
     cursor.close()
     db.close()
     return redirect(url_for("index"))
+
+@app.route("/recycle_bin")
+def recycle_bin():
+    db = get_db_connection()
+    cursor = db.cursor()
+    cursor.execute("SELECT * FROM users WHERE is_deleted = 1")
+    users = cursor.fetchall()
+    cursor.close()
+    db.close()
+    return render_template("recycle_bin.html", users=users)
+
+@app.route("/restore/<int:id>")
+def restore_user(id):
+    db = get_db_connection()
+    cursor = db.cursor()
+    cursor.execute("UPDATE users SET is_deleted = 0 WHERE id=%s", (id,))
+    log_activity(cursor, session.get('user_id'), f"Restored user ID: {id} from Recycle Bin")
+    db.commit()
+    cursor.close()
+    db.close()
+    return redirect(url_for("recycle_bin"))
 
 
 # Session Authentication Core (Login / Logout)
@@ -192,16 +224,34 @@ def login():
         
         db = get_db_connection()
         cursor = db.cursor()
+        # Find user by email and password first
         cursor.execute("SELECT * FROM users WHERE email=%s AND password=%s", (email, password))
         user = cursor.fetchone()
         
         if user:
+            # Check if user is deleted
+            if user[9] == 1: # is_deleted column
+                cursor.close()
+                db.close()
+                return render_template("login.html", error="This account has been deleted.")
+            
+            # Check if status is active
+            if user[6] != 'active': # status column
+                status_msg = f"Your account is currently {user[6]}. Please contact an admin to activate it."
+                cursor.close()
+                db.close()
+                return render_template("login.html", error=status_msg)
+
             session['user_id'] = user[0]
             session['user_email'] = user[2]
             session['user_name'] = user[1]
             session['user_role'] = user[5]
             
-            cursor.execute("UPDATE users SET login_time=CURRENT_TIMESTAMP WHERE id=%s", (user[0],))
+            # Update last login and current login time
+            last_login = user[10] # Fix: Correct index for last_login is now 10
+            cursor.execute("UPDATE users SET last_login=login_time, login_time=CURRENT_TIMESTAMP WHERE id=%s", (user[0],))
+            
+            log_activity(cursor, user[0], "Logged in to the system")
             db.commit()
             
             cursor.close()
@@ -255,7 +305,7 @@ def notifications():
         msgs = cursor.fetchall()
         
         # Also need user list for the send form
-        cursor.execute("SELECT id, name, role FROM users WHERE id != %s", (session['user_id'],))
+        cursor.execute("SELECT id, name, role FROM users WHERE id != %s AND is_deleted = 0", (session['user_id'],))
         users = cursor.fetchall()
         
         cursor.close()
@@ -294,6 +344,7 @@ def send_notification():
     else:
         cursor.execute("INSERT INTO notifications (sender_id, receiver_id, message) VALUES (%s, %s, %s)", 
                        (sender_id, receiver_id, message))
+        log_activity(cursor, sender_id, f"Sent notification to user ID: {receiver_id}")
     
     db.commit()
     cursor.close()
