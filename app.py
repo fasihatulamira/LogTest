@@ -2,9 +2,9 @@ from flask import Flask, render_template, request, redirect, url_for, session
 import mysql.connector
 import os
 from werkzeug.utils import secure_filename
-#unique random number
 from uuid import uuid4
 import uuid
+from flaskwebgui import FlaskUI
 
 
 # System Setup & Configuration
@@ -331,4 +331,6 @@ def delete_notification(id):
     return redirect(url_for("notifications"))
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    # Initialize FlaskUI with the app and set fullscreen mode
+    ui = FlaskUI(app=app, server="flask", fullscreen=True)
+    ui.run()
