@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login - Auth System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .login-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: calc(100vh - 4rem);
+        }
+        .login-card {
+            width: 100%;
+            max-width: 400px;
+        }
+    </style>
+</head>
+<body class="auth-body">
+
+<div class="login-wrapper">
+    <div class="glass-card login-card" style="text-align: center;">
+        <h2 style="margin-bottom: 1rem;">Secure Login</h2>
+        <p style="color: var(--text-muted); margin-bottom: 2rem;">Please sign in to access the system.</p>
+        
+        {% if error %}
+            <div style="background: rgba(239, 68, 68, 0.2); border-left: 4px solid var(--danger); padding: 0.8rem; border-radius: 4px; margin-bottom: 1.5rem; color: #fff;">
+                {{ error }}
+            </div>
+        {% endif %}
+        
+        <form action="/login" method="POST">
+            <div class="form-group">
+                <input type="email" name="email" placeholder="Email Address" required autocomplete="off">
+            </div>
+            <div class="form-group password-group">
+                <input type="password" name="password" id="loginPassword" placeholder="Password" required>
+                <button type="button" class="btn-toggle-password" onclick="toggleVisibility()">Show</button>
+            </div>
+            <button type="submit" style="margin-top: 2rem;">Sign In</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    function toggleVisibility() {
+        const input = document.getElementById('loginPassword');
+        const btn = document.querySelector('.btn-toggle-password');
+        if (input.type === 'password') {
+            input.type = 'text';
+            btn.textContent = 'Hide';
+        } else {
+            input.type = 'password';
+            btn.textContent = 'Show';
+        }
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Directory - User Management System{% endblock %}
+
+{% block content %}
+<div class="dashboard-container full-width">
+    
+    <div class="glass-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <h2>Users Directory</h2>
+            {% if session.get('user_role') == 'admin' %}
+            <a href="{{ url_for('add_user_page') }}" class="btn-filter" style="text-decoration: none; padding: 0.6rem 1.2rem; background: var(--accent-gradient); color: white; border-radius: 8px;">+ Add New User</a>
+            {% endif %}
+        </div>
+
+        <!-- Search and Filter Toolbar -->
+        <form action="/" method="GET" class="filter-toolbar">
+            <input type="text" name="search" placeholder="Search name or email..." value="{{ request.args.get('search', '') }}">
+            <select name="role">
+                <option value="">All Roles</option>
+                <option value="user" {% if request.args.get('role') == 'user' %}selected{% endif %}>User</option>
+                <option value="guest" {% if request.args.get('role') == 'guest' %}selected{% endif %}>Guest</option>
+                <option value="admin" {% if request.args.get('role') == 'admin' %}selected{% endif %}>Admin</option>
+            </select>
+            <select name="status">
+                <option value="">All Statuses</option>
+                <option value="active" {% if request.args.get('status') == 'active' %}selected{% endif %}>Active</option>
+                <option value="inactive" {% if request.args.get('status') == 'inactive' %}selected{% endif %}>Inactive</option>
+                <option value="pending" {% if request.args.get('status') == 'pending' %}selected{% endif %}>Pending</option>
+            </select>
+            <button type="submit" class="btn-filter">Filter</button>
+            <a href="/" class="btn-clear">Clear</a>
+        </form>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Avatar</th>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        {% if session.get('user_role') == 'admin' %}
+                        <th>Actions</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>
+                            {% if user[7] and user[7] != 'default.png' %}
+                                <img src="{{ url_for('static', filename='uploads/' + user[7]) }}" alt="Avatar" class="avatar-sm">
+                            {% else %}
+                                <div class="avatar-sm placeholder"></div>
+                            {% endif %}
+                        </td>
+                        <td>#{{ user[0] }}</td>
+                        <td><strong><a href="/view/{{ user[0] }}" class="user-link">{{ user[1] }}</a></strong></td>
+                        <td>{{ user[2] }}</td>
+                        <td>{{ user[3] }}</td>
+                        <td><span class="badge">{{ user[5] }}</span></td>
+                        <td><span class="badge {{ user[6]|lower }}">{{ user[6] }}</span></td>
+                        {% if session.get('user_role') == 'admin' %}
+                        <td class="action-links">
+                            <a href="/view/{{ user[0] }}" class="btn-view">View</a>
+                            <a href="/update/{{ user[0] }}" class="btn-update">Edit</a>
+                            <a href="/delete/{{ user[0] }}" class="btn-delete" onclick="return confirm('Are you sure you want to permanently delete this user?');">Remove</a>
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

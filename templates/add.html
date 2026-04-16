@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Add New User - UMS{% endblock %}
+
+{% block content %}
+<div class="dashboard-container center-layout" style="max-width: 500px; margin: 0 auto;">
+    <div class="glass-card">
+        <h2>Add New User</h2>
+        <form action="/add" method="POST" enctype="multipart/form-data">
+            <div class="form-group">
+                <input type="text" name="name" placeholder="Full Name" required autocomplete="off">
+            </div>
+            <div class="form-group">
+                <input type="email" name="email" placeholder="Email Address" required autocomplete="off">
+            </div>
+            <div class="form-group">
+                <input type="tel" name="phone_number" placeholder="Phone Number" required autocomplete="off">
+            </div>
+            <div class="form-group password-group">
+                <input type="password" name="password" id="addPassword" placeholder="Password" required>
+                <button type="button" class="btn-toggle-password" onclick="toggleAddPassword()">Show</button>
+            </div>
+            <div class="form-group">
+                <select name="role" required>
+                    <option value="" disabled selected>Select Role</option>
+                    <option value="user">User</option>
+                    <option value="guest">Guest</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <select name="status" required>
+                    <option value="" disabled selected>Select Status</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                    <option value="pending">Pending</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <input type="file" name="profile_pic" accept="image/*">
+            </div>
+            <button type="submit">Create User</button>
+        </form>
+        
+        <a href="{{ url_for('index') }}" class="back-link">← Cancel & Return to Directory</a>
+    </div>
+</div>
+
+<script>
+function toggleAddPassword() {
+    const input = document.getElementById('addPassword');
+    const btn = document.querySelector('.password-group .btn-toggle-password');
+    if (input.type === 'password') {
+        input.type = 'text';
+        btn.textContent = 'Hide';
+    } else {
+        input.type = 'password';
+        btn.textContent = 'Show';
+    }
+}
+</script>
+{% endblock %}

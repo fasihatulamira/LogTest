@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Profile - {{ user[1] }}{% endblock %}
+
+{% block content %}
+<div class="dashboard-container center-layout">
+    <div class="glass-card">
+        <h2>Edit User Profile</h2>
+        <div class="profile-preview">
+            {% if user[7] and user[7] != 'default.png' %}
+                <img src="{{ url_for('static', filename='uploads/' + user[7]) }}" class="avatar-lg">
+            {% else %}
+                <div class="avatar-lg placeholder"></div>
+            {% endif %}
+        </div>
+        <form action="/update/{{ user[0] }}" method="POST" enctype="multipart/form-data">
+            <div class="form-group">
+                <input type="text" name="name" value="{{ user[1] }}" required placeholder="Full Name">
+            </div>
+            <div class="form-group">
+                <input type="email" name="email" value="{{ user[2] }}" required placeholder="Email Address">
+            </div>
+            <div class="form-group">
+                <input type="tel" name="phone_number" value="{{ user[3] }}" required placeholder="Phone Number">
+            </div>
+            <div class="form-group password-group">
+                <input type="password" name="password" id="updatePassword" value="{{ user[4] }}" placeholder="Update Password" required>
+                <button type="button" class="btn-toggle-password" onclick="togglePasswordVisibility()">Show</button>
+            </div>
+            <div class="form-group">
+                <select name="role" required>
+                    <option value="user" {% if user[5] == 'user' %}selected{% endif %}>User</option>
+                    <option value="guest" {% if user[5] == 'guest' %}selected{% endif %}>Guest</option>
+                    <option value="admin" {% if user[5] == 'admin' %}selected{% endif %}>Admin</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <select name="status" required>
+                    <option value="active" {% if user[6] == 'active' %}selected{% endif %}>Active</option>
+                    <option value="inactive" {% if user[6] == 'inactive' %}selected{% endif %}>Inactive</option>
+                    <option value="pending" {% if user[6] == 'pending' %}selected{% endif %}>Pending</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <input type="file" name="profile_pic" accept="image/*">
+            </div>
+            <button type="submit">Save Changes</button>
+        </form>
+        
+        <a href="{{ url_for('view_user', id=user[0]) }}" class="back-link">← Cancel & Return to Profile</a>
+    </div>
+</div>
+
+<script>
+    function togglePasswordVisibility() {
+        const passwordInput = document.getElementById('updatePassword');
+        const toggleBtn = document.querySelector('.btn-toggle-password');
+        
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            toggleBtn.textContent = 'Hide';
+        } else {
+            passwordInput.type = 'password';
+            toggleBtn.textContent = 'Show';
+        }
+    }
+</script>
+{% endblock %}

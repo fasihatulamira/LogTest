@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Notifications - UMS{% endblock %}
+
+{% block content %}
+<div class="notification-container">
+    
+    {% if session.get('user_role') == 'admin' %}
+    <!-- Admin: Compose Notification -->
+    <div class="glass-card compose-box">
+        <h2>Send Notification</h2>
+        <form action="{{ url_for('send_notification') }}" method="POST">
+            <div class="form-group">
+                <label style="color: var(--text-muted); font-size: 0.9rem; display: block; margin-bottom: 0.5rem;">Select Recipient</label>
+                <select name="receiver_id" required>
+                    <option value="all">📢 All Users (Broadcast)</option>
+                    {% for u in users %}
+                        <option value="{{ u[0] }}">{{ u[1] }} ({{ u[2]|capitalize }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <textarea name="message" placeholder="Type your announcement or message here..." required></textarea>
+            </div>
+            <button type="submit" style="margin-top: 0;">Send Notification</button>
+        </form>
+    </div>
+    {% endif %}
+
+    <!-- Notification List -->
+    <div class="glass-card">
+        <h2>Notification History</h2>
+        
+        {% if not messages %}
+            <p style="color: var(--text-muted); text-align: center; margin: 3rem 0;">No notifications found.</p>
+        {% endif %}
+
+        <div class="notification-list">
+            {% for msg in messages %}
+            <div class="notification-card {% if not msg[4] %}unread{% else %}read{% endif %}">
+                <div class="notification-header">
+                    <div>
+                        <span class="sender-name">{{ msg[7] }}</span>
+                        {% if session.get('user_role') == 'admin' %}
+                        <span style="color: var(--text-muted); margin: 0 5px;">→</span>
+                        <span style="color: #fff;">{{ msg[8] }}</span>
+                        {% endif %}
+                    </div>
+                    <span class="msg-time">{{ msg[5].strftime('%b %d, %I:%M %p') }}</span>
+                </div>
+                
+                <div class="notification-body">
+                    {{ msg[3] }}
+                </div>
+
+                <div class="notification-actions">
+                    {% if session.get('user_role') == 'admin' %}
+                        <form action="{{ url_for('delete_notification', id=msg[0]) }}" method="POST" style="display:inline;">
+                            <button type="submit" class="btn-delete-msg" onclick="return confirm('Permanently delete this message?')">Delete</button>
+                        </form>
+                    {% else %}
+                        {% if not msg[4] %}
+                        <form action="{{ url_for('mark_read', id=msg[0]) }}" method="POST" style="display:inline;">
+                            <button type="submit" class="btn-mark-read">Mark as Read</button>
+                        </form>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

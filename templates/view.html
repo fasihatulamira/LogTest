@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}View Profile - {{ user[1] }}{% endblock %}
+
+{% block extra_head %}
+<style>
+    .profile-card h3 {
+        font-size: 1.8rem;
+        color: #fff;
+    }
+
+    .info-box {
+        text-align: left;
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid var(--card-border);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.8rem 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .info-row:last-child {
+        border-bottom: none;
+    }
+
+    .info-label {
+        color: var(--text-muted);
+        font-weight: 500;
+        font-size: 0.9rem;
+    }
+
+    .info-value {
+        font-weight: 500;
+        color: #fff;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container center-layout">
+    <div class="glass-card profile-card" style="text-align: center;">
+
+        <div class="profile-preview" style="margin-top: 1rem;">
+            {% if user[7] and user[7] != 'default.png' %}
+            <img src="{{ url_for('static', filename='uploads/' + user[7]) }}" class="avatar-lg shadow-glow">
+            {% else %}
+            <div class="avatar-lg placeholder shadow-glow"></div>
+            {% endif %}
+        </div>
+
+        <h3 style="margin-bottom: 5px;">{{ user[1] }}</h3>
+        <p style="color: var(--text-muted); margin-bottom: 1.5rem;">{{ user[2] }}</p>
+
+        <div class="info-box">
+            <div class="info-row">
+                <span class="info-label">User ID</span>
+                <span class="info-value">#{{ user[0] }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Phone Number</span>
+                <span class="info-value">{{ user[3] }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Role</span>
+                <span class="badge" style="margin: 0;">{{ user[5] }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Status</span>
+                <span class="badge {{ user[6]|lower }}" style="margin: 0;">{{ user[6] }}</span>
+            </div>
+        </div>
+
+        {% if session.get('user_role', '') == 'admin' %}
+        <a href="/" class="back-link" style="margin-top: 0;">← Return to Directory</a>
+        {% else %}
+        <div style="margin-top: 1rem;">
+            <a href="{{ url_for('update_user', id=user[0]) }}" class="btn-update" style="text-decoration: none; font-weight: 600;">Edit Profile</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
