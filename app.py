@@ -33,7 +33,7 @@ def get_db_connection():
     return mysql.connector.connect(
         host="localhost",
         user="root",
-        password="Ceah_3007",
+        password=os.getenv("DB_PASSWORD"),
         database="userdb"
     )
 
